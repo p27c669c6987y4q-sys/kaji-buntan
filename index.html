@@ -192,7 +192,7 @@ html, body {
   </div>
 
   <div class="daily-note">
-    🍚 <span><strong>るな</strong>は炊飯・置き配担当　／　<strong>ゆうる</strong>は食器洗い担当</span>
+    🍚 <span><strong>るな</strong>は炊飯・置き配担当　／　<strong>ゆうか</strong>は食器洗い担当</span>
   </div>
 
   <div class="cards" id="cards"></div>
@@ -205,18 +205,17 @@ html, body {
     <div class="rules-body" id="rulesBody">
       <div class="rule-group">
         <div class="rule-group-title">⚫ 掃除担当（週番り）</div>
-        <div class="rule-row"><span class="icon">🚽</span><span><span class="rule-highlight">トイレ</span>：週1:ブラシ <span class="rule-muted">（スカンセにぐれば�励に1庺）</span></span></div>
-        <div class="rule-row"><span class="icon">🛁</span><span><span class="rule-highlight">お㦨呂</span>：浴槽・壁面・排水溝カビキラー 週1</span></div>
-        <div class="rule-row"><span class="icon">🪥</span><span><span class="rule-highlight">洗杢台</span>：壁面・排水溝カビキラー週1</span></div>
+        <div class="rule-row"><span class="icon">🚽</span><span><span class="rule-highlight">トイレ</span>：週1ブラシ <span class="rule-muted">（スタンプなければ2週に1度）</span></span></div>
+        <div class="rule-row"><span class="icon">🛁</span><span><span class="rule-highlight">お風呂</span>：浴槽・壁面・排水溝カビキラー 週1</span></div>
+        <div class="rule-row"><span class="icon">🪥</span><span><span class="rule-highlight">洗面台</span>：壁面・排水溝カビキラー 週1</span></div>
         <div class="rule-row"><span class="icon">🗑️</span><span><span class="rule-highlight">ゴミ箱の中身捨て</span>：炊飯付き</span></div>
         <div class="rule-row"><span class="icon">🏚️</span><span><span class="rule-highlight">排水溝（浴室）</span>：<span class="rule-muted">スケジュール（⚐マーク週）</span></span></div>
       </div>
       <div class="rule-group">
         <div class="rule-group-title">★ 洗濯担当（週番り）</div>
         <div class="rule-row"><span class="icon">🧺</span><span><span class="rule-highlight">洗濯</span>：炊飯</span></div>
-        <div class="rule-row"><span class="icon">📦</x�A��><span><span class="rule-highlight">段ボール捨て
-</span></div>
-        <div class="rule-row"><span class="icon">🛏️</span><span><span class="rule-highlight">コート洗�</span>：<span class="rule-muted">スクジュール（⚐マーク週）</span></span></div>
+        <div class="rule-row"><span class="icon">📦</span><span><span class="rule-highlight">段ボール捨て</span>：炊飯</span></div>
+        <div class="rule-row"><span class="icon">🛏️</span><span><span class="rule-highlight">シーツ洗い</span>：<span class="rule-muted">スケジュール（⚐マーク週）</span></span></div>
         <div class="rule-row"><span class="icon">🧧</span><span><span class="rule-highlight">洗濯槽クリーナー</span>：<span class="rule-muted">2ヶ月毎（⚐マーク週）</span></span></div>
       </div>
       <div class="rule-group">
@@ -237,7 +236,7 @@ const WEEKS = [
   ["1/12","るな","✓","","⚐","ゆうか","✓","","",""],
   ["1/19","ゆうか","✓","","","るな","✓","⚐","",""],
   ["1/26","るな","✓","","","ゆうか","✓","","",""],
-  ["2/2","ゆうか","","","⚐","るな","","","",""],
+  ["2/2","ゆうか","","","⚐","るな","✓","","",""],
   ["2/9","るな","✓","⚐","","ゆうか","","⚐","⚐",""],
   ["2/16","ゆうか","","","","るな","","","",""],
   ["2/23","るな","✓","","⚐","ゆうか","✓","","",""],
@@ -379,7 +378,7 @@ function buildCard(week, person, tasks, role, weekDoneCol) {
     <div class="card ${cls}" id="card-${cls}">
       <div class="card-header">
         <span class="card-name">${person}</span>
-        <span class="card-role">${isMaru ? '⚫ 掃除' : '★ 洗濯'}|/span>
+        <span class="card-role">${isMaru ? '⚫ 掃除' : '★ 洗濯'}</span>
       </div>
       <div class="progress-wrap">
         <div class="progress-bar">
@@ -406,7 +405,7 @@ function render() {
   const startDate = weekDate(weekStr);
   const endDate = addDays(startDate, 6);
   document.getElementById('weekLabel').innerHTML =
-    `${YEAR}� ${weekStr}���週〜${fmtDate(endDate)}）` +
+    `${YEAR}年 ${weekStr}（週〜${fmtDate(endDate)}）` +
     (isCurrent ? '<span class="today-badge">今週</span>' : '');
   document.getElementById('weekRange').textContent =
     isCurrent ? '現在の週' : (currentIdx < todayIdx ? '過去の週' : '未来の週');
