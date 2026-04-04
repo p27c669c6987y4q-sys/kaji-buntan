@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🏠 家事分担</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --runa: #6366f1;
+  --runa-light: #eef2ff;
+  --yuka: #ec4899;
+  --yuka-light: #fdf2f8;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --green: #10b981;
+  --amber: #f59e0b;
+}
+html, body {
+  font-family: -apple-system, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'YuGothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+.app { max-width: 700px; margin: 0 auto; padding: 14px 10px 60px; width: 100%; }
+
+/* Header */
+.header { text-align: center; padding: 16px 0 8px; }
+.header h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+/* Week Navigator */
+.week-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  background: white; border-radius: 18px; padding: 12px 10px;
+  margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.nav-btn {
+  background: var(--bg); border: none; cursor: pointer;
+  width: 44px; height: 44px; border-radius: 12px;
+  font-size: 20px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; color: var(--text); flex-shrink: 0;
+}
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.week-info { text-align: center; flex: 1; }
+.week-date { font-size: 16px; font-weight: 700; }
+.week-range { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.today-badge {
+  display: inline-block; background: var(--green); color: white;
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+  margin-left: 6px; vertical-align: middle;
+}
+
+/* Daily note */
+.daily-note {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+  padding: 10px 14px; font-size: 13px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px; color: #92400e;
+}
+
+/* Cards Grid */
+.cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 600px) {
+  .cards { grid-template-columns: 1fr 1fr; }
+}
+
+/* Person Card */
+.card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.card-header {
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card.runa .card-header { background: linear-gradient(135deg, #6366f1, #818cf8); }
+.card.yuka .card-header { background: linear-gradient(135deg, #ec4899, #f472b6); }
+.card-name { font-size: 17px; font-weight: 800; color: white; }
+.card-role {
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 99px;
+  margin-left: auto;
+}
+
+/* Progress */
+.progress-wrap { padding: 10px 14px 0; }
+.progress-bar {
+  height: 6px; border-radius: 99px; background: var(--border); overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+.card.runa .progress-fill { background: var(--runa); }
+.card.yuka .progress-fill { background: var(--yuka); }
+.progress-label {
+  font-size: 11px; color: var(--muted); text-align: right; padding: 3px 0 6px;
+}
+.progress-label span { font-weight: 700; color: var(--text); }
+
+/* Tasks */
+.section-label {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  padding: 10px 14px 4px; text-transform: uppercase; letter-spacing: 0.8px;
+}
+.task-divider { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+
+.task-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; cursor: pointer; transition: background 0.12s;
+  user-select: none; min-height: 48px;
+}
+.task-item:active { background: var(--border); }
+
+.task-cb {
+  width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--border);
+  flex-shrink: 0; margin-top: 0; display: flex; align-items: center;
+  justify-content: center; transition: all 0.15s; background: white;
+}
+.task-item.done .task-cb { border-color: transparent; }
+.card.runa .task-item.done .task-cb { background: var(--runa); }
+.card.yuka .task-item.done .task-cb { background: var(--yuka); }
+.task-cb::after {
+  content: ''; width: 6px; height: 10px;
+  border: 2.5px solid white; border-top: none; border-left: none;
+  transform: rotate(45deg) translate(-1px,-1px);
+  opacity: 0; transition: opacity 0.15s;
+}
+.task-item.done .task-cb::after { opacity: 1; }
+
+.task-text {
+  font-size: 14px; line-height: 1.5; flex: 1; padding-top: 3px;
+  transition: opacity 0.2s, color 0.2s;
+}
+.task-item.done .task-text { text-decoration: line-through; opacity: 0.4; }
+
+.task-badge {
+  flex-shrink: 0; margin-top: 5px;
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px;
+}
+.badge-special { background: #fef3c7; color: #d97706; }
+.badge-2month { background: #fee2e2; color: #dc2626; }
+
+/* All done state */
+.all-done {
+  text-align: center; padding: 20px 14px;
+  font-size: 13px; color: var(--muted);
+}
+.all-done .trophy { font-size: 28px; display: block; margin-bottom: 4px; }
+
+/* Rules section */
+.rules-card {
+  background: white; border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07); overflow: hidden; margin-top: 14px;
+}
+.rules-toggle {
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 700; text-align: left; color: var(--text); min-height: 48px;
+}
+.rules-body {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px 16px; display: none;
+}
+.rules-body.open { display: block; }
+.rule-group { margin-bottom: 12px; }
+.rule-group-title {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+}
+.rule-row {
+  display: flex; gap: 6px; align-items: flex-start;
+  font-size: 13px; color: var(--text); padding: 3px 0; line-height: 1.5;
+}
+.rule-row .icon { flex-shrink: 0; }
+.rule-highlight { font-weight: 600; }
+.rule-muted { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🏠 家事分担</h1>
+    <p>るな &amp; ゆうか</p>
+  </div>
+
+  <div class="week-nav">
+    <button class="nav-btn" id="prevBtn">‹</button>
+    <div class="week-info">
+      <div class="week-date" id="weekLabel">--</div>
+      <div class="week-range" id="weekRange"></div>
+    </div>
+    <button class="nav-btn" id="nextBtn">›</button>
+  </div>
+
+  <div class="daily-note">
+    🍚 <span><strong>るな</strong>は炊飯・置き配担当　／　<strong>ゆうる</strong>は食器洗い担当</span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="rules-card">
+    <button class="rules-toggle" id="rulesToggle">
+      <span>📋 家事のルール</span>
+      <span id="rulesArrow">▼</span>
+    </button>
+    <div class="rules-body" id="rulesBody">
+      <div class="rule-group">
+        <div class="rule-group-title">⚫ 掃除担当（週番り）</div>
+        <div class="rule-row"><span class="icon">🚽</span><span><span class="rule-highlight">トイレ</span>：週1:ブラシ <span class="rule-muted">（スカンセにぐれば�励に1庺）</span></span></div>
+        <div class="rule-row"><span class="icon">🛁</span><span><span class="rule-highlight">お㦨呂</span>：浴槽・壁面・排水溝カビキラー 週1</span></div>
+        <div class="rule-row"><span class="icon">🪥</span><span><span class="rule-highlight">洗杢台</span>：壁面・排水溝カビキラー週1</span></div>
+        <div class="rule-row"><span class="icon">🗑️</span><span><span class="rule-highlight">ゴミ箱の中身捨て</span>：炊飯付き</span></div>
+        <div class="rule-row"><span class="icon">🏚️</span><span><span class="rule-highlight">排水溝（浴室）</span>：<span class="rule-muted">スケジュール（⚐マーク週）</span></span></div>
+      </div>
+      <div class="rule-group">
+        <div class="rule-group-title">★ 洗濯担当（週番り）</div>
+        <div class="rule-row"><span class="icon">🧺</span><span><span class="rule-highlight">洗濯</span>：炊飯</span></div>
+        <div class="rule-row"><span class="icon">📦</x�A��><span><span class="rule-highlight">段ボール捨て
+</span></div>
+        <div class="rule-row"><span class="icon">🛏️</span><span><span class="rule-highlight">コート洗�</span>：<span class="rule-muted">スクジュール（⚐マーク週）</span></span></div>
+        <div class="rule-row"><span class="icon">🧧</span><span><span class="rule-highlight">洗濯槽クリーナー</span>：<span class="rule-muted">2ヶ月毎（⚐マーク週）</span></span></div>
+      </div>
+      <div class="rule-group">
+        <div class="rule-group-title">🍚 るな 炊飯・置き配</div>
+        <div class="rule-row"><span class="icon">🍚</span><span><span class="rule-highlight">炊飯・置き配担当</span></span></div>
+      </div>
+      <div class="rule-group">
+        <div class="rule-group-title">🍽️ ゆうか 食器洗い</div>
+        <div class="rule-row"><span class="icon">🍽️</span><span><span class="rule-highlight">食器洗い担当</span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const WEEKS = [
+  ["1/12","るな","✓","","⚐","ゆうか","✓","","",""],
+  ["1/19","ゆうか","✓","","","るな","✓","⚐","",""],
+  ["1/26","るな","✓","","","ゆうか","✓","","",""],
+  ["2/2","ゆうか","","","⚐","るな","","","",""],
+  ["2/9","るな","✓","⚐","","ゆうか","","⚐","⚐",""],
+  ["2/16","ゆうか","","","","るな","","","",""],
+  ["2/23","るな","✓","","⚐","ゆうか","✓","","",""],
+  ["3/2","ゆうか","","","","るな","","⚐","","⚐"],
+  ["3/9","るな","","","","ゆうか","","","",""],
+  ["3/16","ゆうか","","","⚐","るな","","","",""],
+  ["3/23","るな","","","","ゆうか","","⚐","",""],
+  ["3/30","ゆうか","","","","るな","","","",""],
+  ["4/6","るな","","","⚐","ゆうか","","⚐","",""],
+  ["4/13","ゆうか","","⚐","","るな","","⚐","⚐",""],
+  ["4/20","るな","","","","ゆうか","","⚐","",""],
+  ["4/27","ゆうか","","","⚐","るな","","⚐","",""],
+  ["5/4","るな","","","","ゆうか","","⚐","","⚐"],
+  ["5/11","ゆうか","","","","るな","","⚐","",""],
+  ["5/18","るな","","","⚐","ゆうか","","⚐","",""],
+  ["5/25","ゆうか","","","","るな","","⚐","",""],
+  ["6/1","るな","","⚐","","ゆうか","","⚐","⚐",""],
+  ["6/8","ゆうか","","","⚐","るな","","⚐","",""],
+  ["6/15","るな","","","","ゆうか","","⚐","",""],
+  ["6/22","ゆうか","","","","るな","","⚐","",""],
+  ["6/29","るな","","","⚐","ゆうか","","⚐","",""],
+  ["7/6","ゆうか","","","","るな","","⚐","","⚐"],
+  ["7/13","るな","","","","ゆうか","","⚐","",""],
+  ["7/20","ゆうか","","","⚐","るな","","⚐","",""],
+  ["7/27","るな","","","","ゆうか","","⚐","",""],
+  ["8/3","ゆうか","","⚐","","るな","","⚐","⚐",""],
+  ["8/10","るな","","","⚐","ゆうか","","⚐","",""],
+  ["8/17","ゆうか","","","","るな","","⚐","",""],
+  ["8/24","るな","","","","ゆうか","","⚐","",""],
+  ["8/31","ゆうか","","","⚐","るな","","⚐","",""],
+];
+
+const YEAR = 2026;
+
+// ===== DATE HELPERS =====
+function weekDate(str) {
+  const [m, d] = str.split('/').map(Number);
+  return new Date(YEAR, m - 1, d);
+}
+function addDays(date, n) {
+  const d = new Date(date); d.setDate(d.getDate() + n); return d;
+}
+function fmtDate(date) {
+  return `${date.getMonth()+1}/${date.getDate()}`;
+}
+function getCurrentWeekIndex() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  let best = 0;
+  for (let i = 0; i < WEEKS.length; i++) {
+    const start = weekDate(WEEKS[i][0]);
+    const end = addDays(start, 6);
+    if (today >= start && today <= end) return i;
+    if (today > end) best = i;
+  }
+  return best;
+}
+
+// ===== TASK DEFINITIONS =====
+function getMaruTasks(week) {
+  const tasks = [
+    { id: 'toilet',   text: '🚽 トイレ掃除（ブラシ）' },
+    { id: 'bath',     text: '🛁 お風呂（浴槽・壁面・排水溝カビキラー）' },
+    { id: 'washroom', text: '🪥 洗面台（壁面・排水溝カビキラー）' },
+    { id: 'trash',    text: '🗑️ ゴミ箱の中身捨て' },
+  ];
+  if (week[3] === '⚐') tasks.push({ id: 'ofuro',  text: '🔥 追い焚きに使ったお湯入れ替え', badge: '2ヶ月毎', badgeClass: 'badge-2month' });
+  if (week[4] === '⚐') tasks.push({ id: 'drain',  text: '🏚️ 排水溝（浴室・目皿のみ）',   badge: '特別',    badgeClass: 'badge-special' });
+  return tasks;
+}
+function getStarTasks(week) {
+  const tasks = [
+    { id: 'laundry',   text: '🧺 洗濯' },
+    { id: 'cardboard', text: '📦 段ボール捨て' },
+  ];
+  if (week[7] === '⚐') tasks.push({ id: 'sheets',  text: '🛏️ シーツ洗い',        badge: '特別',    badgeClass: 'badge-special' });
+  if (week[8] === '⚐') tasks.push({ id: 'tank',    text: '🧧 洗濯槽クリーナー',  badge: '2ヶ月毎', badgeClass: 'badge-2month' });
+  if (week[9] === '⚐') tasks.push({ id: 'brush',   text: '💣 ブラシ特別清掃',    badge: '特別',    badgeClass: 'badge-special' });
+  return tasks;
+}
+
+// ===== STORAGE =====
+function storageKey(weekStr, taskId) { return `kaji26_${weekStr}_${taskId}`; }
+function isTaskDone(weekStr, taskId, fallback) {
+  try {
+    const v = localStorage.getItem(storageKey(weekStr, taskId));
+    return v !== null ? v === '1' : fallback;
+  } catch(e) { return fallback; }
+}
+function setTaskDone(weekStr, taskId, done) {
+  try { localStorage.setItem(storageKey(weekStr, taskId), done ? '1' : '0'); } catch(e) {}
+}
+
+// ===== STATE =====
+let currentIdx = getCurrentWeekIndex();
+
+// ===== RENDER =====
+function buildCard(week, person, tasks, role, weekDoneCol) {
+  const weekStr = week[0];
+  const isMaru = role === '⚫';
+  const cls = person === 'るな' ? 'runa' : 'yuka';
+  const overallDone = week[weekDoneCol] === '✓';
+
+  const items = tasks.map(t => {
+    const fallback = t.badge ? false : overallDone;
+    const done = isTaskDone(weekStr, t.id, fallback);
+    return { ...t, done };
+  });
+
+  const total = items.length;
+  const doneCount = items.filter(i => i.done).length;
+  const pct = total > 0 ? Math.round(doneCount / total * 100) : 0;
+  const allDone = doneCount === total;
+
+  const regularItems = items.filter(i => !i.badge);
+  const specialItems = items.filter(i => i.badge);
+
+  function taskHTML(t) {
+    return `<div class="task-item ${t.done ? 'done' : ''}" data-week="${weekStr}" data-task="${t.id}" onclick="toggleTask(this)">
+      <div class="task-cb"></div>
+      <span class="task-text">${t.text}</span>
+      ${t.badge ? `<span class="task-badge ${t.badgeClass}">${t.badge}</span>` : ''}
+    </div>`;
+  }
+
+  const specialSection = specialItems.length > 0 ? `
+    <hr class="task-divider">
+    <div class="section-label">✨ 今週の特別タスク</div>
+    ${specialItems.map(taskHTML).join('')}
+  ` : '';
+
+  const doneSection = allDone ? `
+    <div class="all-done">
+      <span class="trophy">🎉</span>
+      今週のタスク完了！
+    </div>
+  ` : '';
+
+  return `
+    <div class="card ${cls}" id="card-${cls}">
+      <div class="card-header">
+        <span class="card-name">${person}</span>
+        <span class="card-role">${isMaru ? '⚫ 掃除' : '★ 洗濯'}|/span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="progress-label"><span>${doneCount}/${total}</span> 完了</div>
+      </div>
+      <div class="section-label">炊飯のタスク</div>
+      ${regularItems.map(taskHTML).join('')}
+      ${specialSection}
+      ${doneSection}
+    </div>
+  `;
+}
+
+function render() {
+  const week = WEEKS[currentIdx];
+  const weekStr = week[0];
+  const maruPerson = week[1];
+  const starPerson = week[5];
+  const todayIdx = getCurrentWeekIndex();
+  const isCurrent = currentIdx === todayIdx;
+
+  const startDate = weekDate(weekStr);
+  const endDate = addDays(startDate, 6);
+  document.getElementById('weekLabel').innerHTML =
+    `${YEAR}� ${weekStr}���週〜${fmtDate(endDate)}）` +
+    (isCurrent ? '<span class="today-badge">今週</span>' : '');
+  document.getElementById('weekRange').textContent =
+    isCurrent ? '現在の週' : (currentIdx < todayIdx ? '過去の週' : '未来の週');
+
+  document.getElementById('prevBtn').disabled = currentIdx === 0;
+  document.getElementById('nextBtn').disabled = currentIdx === WEEKS.length - 1;
+
+  const maruTasks = getMaruTasks(week);
+  const starTasks = getStarTasks(week);
+
+  const runaIsM = maruPerson === 'るな';
+  const runaCard = buildCard(week, 'るな', runaIsM ? maruTasks : starTasks, runaIsM ? '⚫' : '★', runaIsM ? 2 : 6);
+  const yukaCard = buildCard(week, 'ゆうか', runaIsM ? starTasks : maruTasks, runaIsM ? '★' : '⚫', runaIsM ? 6 : 2);
+
+  document.getElementById('cards').innerHTML = runaCard + yukaCard;
+}
+
+// ===== INTERACTIONS =====
+function toggleTask(el) {
+  const weekStr = el.dataset.week;
+  const taskId = el.dataset.task;
+  const isDone = el.classList.contains('done');
+  const newDone = !isDone;
+  setTaskDone(weekStr, taskId, newDone);
+  el.classList.toggle('done', newDone);
+  updateCardProgress(weekStr, el);
+}
+
+function updateCardProgress(weekStr, clickedEl) {
+  const card = clickedEl.closest('.card');
+  if (!card) return;
+  const items = card.querySelectorAll('.task-item');
+  const total = items.length;
+  const doneCount = Array.from(items).filter(i => i.classList.contains('done')).length;
+  const pct = total > 0 ? Math.round(doneCount / total * 100) : 0;
+  card.querySelector('.progress-fill').style.width = pct + '%';
+  card.querySelector('.progress-label span').textContent = `${doneCount}/${total}`;
+  const allDoneEl = card.querySelector('.all-done');
+  if (doneCount === total && !allDoneEl) {
+    const notice = document.createElement('div');
+    notice.className = 'all-done';
+    notice.innerHTML = '<span class="trophy">🎉</span>今週のタスク完了！';
+    card.appendChild(notice);
+  } else if (doneCount < total && allDoneEl) {
+    allDoneEl.remove();
+  }
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (currentIdx > 0) { currentIdx--; render(); }
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (currentIdx < WEEKS.length - 1) { currentIdx++; render(); }
+});
+
+document.getElementById('rulesToggle').addEventListener('click', () => {
+  const body = document.getElementById('rulesBody');
+  const arrow = document.getElementById('rulesArrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+});
+
+// Initial render
+render();
+</script>
+</body>
+</html>
