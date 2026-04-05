@@ -146,6 +146,19 @@ html, body {
 }
 .all-done .trophy { font-size: 28px; display: block; margin-bottom: 4px; }
 
+/* Sync indicator */
+.sync-bar {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--muted); padding: 4px 0 10px;
+}
+.sync-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #94a3b8;
+  transition: background 0.3s;
+}
+.sync-dot.ok { background: var(--green); }
+.sync-dot.busy { background: var(--amber); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
 /* Rules section */
 .rules-card {
   background: white; border-radius: 18px;
@@ -180,6 +193,10 @@ html, body {
   <div class="header">
     <h1>🏠 家事分担</h1>
     <p>るな &amp; ゆうか</p>
+  </div>
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncLabel">同期中...</span>
   </div>
 
   <div class="week-nav">
@@ -329,6 +346,75 @@ function setTaskDone(weekStr, taskId, done) {
   try { localStorage.setItem(storageKey(weekStr, taskId), done ? '1' : '0'); } catch(e) {}
 }
 
+// ===== FIREBASE SYNC =====
+const DB_URL = 'https://kaji-buntan-sync-default-rtdb.firebaseio.com';
+
+function fbPath(weekStr) {
+  return weekStr.replace(/\//g, '_');
+}
+
+function setSyncStatus(status, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'sync-dot ' + (status === 'ok' ? 'ok' : status === 'busy' ? 'busy' : '');
+  lbl.textContent = label;
+}
+
+async function fbGet(weekStr) {
+  try {
+    const r = await fetch(`${DB_URL}/tasks/${fbPath(weekStr)}.json`);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function fbSet(weekStr, taskId, done) {
+  try {
+    await fetch(`${DB_URL}/tasks/${fbPath(weekStr)}/${taskId}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(done ? 1 : 0)
+    });
+  } catch(e) {}
+}
+
+let _syncPending = false;
+async function syncFromFirebase(silent) {
+  if (_syncPending) return;
+  _syncPending = true;
+  if (!silent) setSyncStatus('busy', '同期中...');
+  try {
+    const weekStr = WEEKS[currentIdx][0];
+    const data = await fbGet(weekStr);
+    if (!data || typeof data !== 'object') {
+      setSyncStatus('ok', '同期済み');
+      return;
+    }
+    let changed = false;
+    for (const [taskId, val] of Object.entries(data)) {
+      const fbDone = val === 1;
+      const localRaw = localStorage.getItem(storageKey(weekStr, taskId));
+      const localDone = localRaw === '1';
+      if (localRaw === null || localDone !== fbDone) {
+        setTaskDone(weekStr, taskId, fbDone);
+        changed = true;
+      }
+    }
+    if (changed) render();
+    const now = new Date();
+    const hm = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    setSyncStatus('ok', `最終同期 ${hm}`);
+  } catch(e) {
+    setSyncStatus('', '同期エラー');
+  } finally {
+    _syncPending = false;
+  }
+}
+
+// Poll every 5 seconds
+setInterval(() => syncFromFirebase(true), 5000);
+
 // ===== STATE =====
 let currentIdx = getCurrentWeekIndex();
 
@@ -432,6 +518,13 @@ function toggleTask(el) {
   setTaskDone(weekStr, taskId, newDone);
   el.classList.toggle('done', newDone);
   updateCardProgress(weekStr, el);
+  // 即座にFirebaseへ書き込み
+  setSyncStatus('busy', '保存中...');
+  fbSet(weekStr, taskId, newDone).then(() => {
+    const now = new Date();
+    const hm = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    setSyncStatus('ok', `最終同期 ${hm}`);
+  });
 }
 
 function updateCardProgress(weekStr, clickedEl) {
@@ -455,10 +548,10 @@ function updateCardProgress(weekStr, clickedEl) {
 }
 
 document.getElementById('prevBtn').addEventListener('click', () => {
-  if (currentIdx > 0) { currentIdx--; render(); }
+  if (currentIdx > 0) { currentIdx--; render(); syncFromFirebase(false); }
 });
 document.getElementById('nextBtn').addEventListener('click', () => {
-  if (currentIdx < WEEKS.length - 1) { currentIdx++; render(); }
+  if (currentIdx < WEEKS.length - 1) { currentIdx++; render(); syncFromFirebase(false); }
 });
 
 document.getElementById('rulesToggle').addEventListener('click', () => {
@@ -470,6 +563,8 @@ document.getElementById('rulesToggle').addEventListener('click', () => {
 
 // Initial render
 render();
+// 起動時にFirebaseから同期
+syncFromFirebase(false);
 </script>
 </body>
 </html>
