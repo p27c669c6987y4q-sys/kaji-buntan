@@ -223,10 +223,10 @@ html, body {
       <div class="rule-group">
         <div class="rule-group-title">⚫ 掃除担当（週番り）</div>
         <div class="rule-row"><span class="icon">🚽</span><span><span class="rule-highlight">トイレ</span>：週1ブラシ <span class="rule-muted">（スタンプなければ2週に1度）</span></span></div>
-        <div class="rule-row"><span class="icon">🛁</span><span><span class="rule-highlight">お風呂</span>：浴槽・壁面・排水溝カビキラー 週1</span></div>
+        <div class="rule-row"><span class="icon">🛁</span><span><span class="rule-highlight">お風呂</span>：洗槽・壁面・排水溝カビキラー 週1</span></div>
         <div class="rule-row"><span class="icon">🪥</span><span><span class="rule-highlight">洗面台</span>：壁面・排水溝カビキラー 週1</span></div>
         <div class="rule-row"><span class="icon">🗑️</span><span><span class="rule-highlight">ゴミ箱の中身捨て</span>：炊飯付き</span></div>
-        <div class="rule-row"><span class="icon">🏚️</span><span><span class="rule-highlight">排水溝（浴室）</span>：<span class="rule-muted">スケジュール（⚐マーク週）</span></span></div>
+        <div class="rule-row"><span class="icon">🏚️</span><span><span class="rule-highlight">排水溝（洗室）</span>：<span class="rule-muted">スケジュール（⚐マーク週）</span></span></div>
       </div>
       <div class="rule-group">
         <div class="rule-group-title">★ 洗濯担当（週番り）</div>
@@ -290,7 +290,7 @@ const YEAR = 2026;
 
 // ===== DATE HELPERS =====
 function weekDate(str) {
-  const [m, d] = str.split('/').map(Number);
+  const [m, d] = str.split("/").map(Number);
   return new Date(YEAR, m - 1, d);
 }
 function addDays(date, n) {
@@ -315,12 +315,12 @@ function getCurrentWeekIndex() {
 function getMaruTasks(week) {
   const tasks = [
     { id: 'toilet',   text: '🚽 トイレ掃除（ブラシ）' },
-    { id: 'bath',     text: '🛁 お風呂（浴槽・壁面・排水溝カビキラー）' },
-    { id: 'washroom', text: '🪥 洗面台（壁面・排水溝カビキラー）' },
+    { id: 'bath',     text: '🛁 お風呂（洗槽・壁面・排水溝磨き）' },
+    { id: 'washroom', text: '🪥 洗面台（鏡・ボウル・排水溝磨き）' },
     { id: 'trash',    text: '🗑️ ゴミ箱の中身捨て' },
   ];
   if (week[3] === '⚐') tasks.push({ id: 'ofuro',  text: '🔥 追い焚きに使ったお湯入れ替え', badge: '2ヶ月毎', badgeClass: 'badge-2month' });
-  if (week[4] === '⚐') tasks.push({ id: 'drain',  text: '🏚️ 排水溝（浴室・目皿のみ）',   badge: '特別',    badgeClass: 'badge-special' });
+  if (week[4] === '⚐') tasks.push({ id: 'drain',  text: '🏚️ 排水溝カビキラー（洗槽・洗い場・洗面台）',   badge: '3週毎',    badgeClass: 'badge-special' });
   return tasks;
 }
 function getStarTasks(week) {
@@ -343,14 +343,14 @@ function isTaskDone(weekStr, taskId, fallback) {
   } catch(e) { return fallback; }
 }
 function setTaskDone(weekStr, taskId, done) {
-  try { localStorage.setItem(storageKey(weekStr, taskId), done ? '1' : '0'); } catch(e) {}
+  try { localStorage.setItem(storageKey(weekStr, taskId), done ? '1' : '0'); } catch(e) {} 
 }
 
 // ===== FIREBASE SYNC =====
 const DB_URL = 'https://kaji-buntan-sync-default-rtdb.firebaseio.com';
 
 function fbPath(weekStr) {
-  return weekStr.replace(/\//g, '_');
+  return weekStr.replace(/\/\/g, '_');
 }
 
 function setSyncStatus(status, label) {
