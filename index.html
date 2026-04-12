@@ -350,7 +350,7 @@ function setTaskDone(weekStr, taskId, done) {
 const DB_URL = 'https://kaji-buntan-sync-default-rtdb.firebaseio.com';
 
 function fbPath(weekStr) {
-  return weekStr.replace(/\/\/g, '_');
+  return weekStr.split('/').join('_');
 }
 
 function setSyncStatus(status, label) {
